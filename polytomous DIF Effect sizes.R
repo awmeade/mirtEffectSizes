@@ -44,32 +44,70 @@ coef(model_anchor,simplify = TRUE)
 
 theta <- fscores(model_anchor, full.scores = TRUE)
 focal.theta <- theta[1:N,]
+focal.theta.mean <- mean(focal.theta)
 
-list.item_ES_foc <- list()
-list.item_ES_ref <- list()
+
+
+#### quadrature nodes - just using base ####
+theta.normal   <- seq(-4,4,length=30)
+theta.den   <- dnorm(x,mean=focal.theta.mean, sd=1)
+theta.density <- theta.den / sum(theta.den)
+rm(theta.den)
+
+
+list.item_ES_foc.obs <- list()
+list.item_ES_ref.obs <- list()
+list.item_ES_foc.nrm <- list()
+list.item_ES_ref.nrm <- list()
+
 
 for(i in 1:ncol(dat)){
   foc.extract<-extract.item(model_anchor,i,group=1)
   ref.extract<-extract.item(model_anchor,i,group=2)
+  foc.ES.obs <- expected.item(foc.extract,focal.theta)
+  ref.ES.obs <- expected.item(ref.extract,focal.theta)
+  foc.ES.nrm <- expected.item(foc.extract,theta.normal)
+  ref.ES.nrm <- expected.item(ref.extract,theta.normal)
   
-  foc.ES <- expected.item(foc.extract,focal.theta)
-  ref.ES <- expected.item(ref.extract,focal.theta)
+  list.item_ES_foc.obs[[i]] <- foc.ES.obs
+  list.item_ES_ref.obs[[i]] <- ref.ES.obs
+  list.item_ES_foc.nrm[[i]] <- foc.ES.nrm
+  list.item_ES_ref.nrm[[i]] <- ref.ES.nrm
   
-  list.item_ES_foc[[i]] <- foc.ES
-  list.item_ES_ref[[i]] <- ref.ES
 }
 
-df.ref <- do.call("cbind",list.item_ES_ref) 
-df.foc <- do.call("cbind",list.item_ES_foc) 
+df.ref.obs <- do.call("cbind",list.item_ES_ref.obs) 
+df.foc.obs <- do.call("cbind",list.item_ES_foc.obs) 
+df.ref.nrm <- do.call("cbind",list.item_ES_ref.nrm) 
+df.foc.nrm <- do.call("cbind",list.item_ES_foc.nrm) 
 
-head(df.ref)
-head(df.foc)
 
-df.dif <- df.ref - df.foc
-df.abs.dif <- abs(df.dif)
-head(df.dif)
+head(df.ref.obs)
+head(df.foc.obs)
+df.foc.nrm
+df.ref.nrm
+
+df.dif.obs <- df.ref.obs - df.foc.obs
+df.abs.dif.obs <- abs(df.dif.obs)
+df.dif.nrm <- df.ref.nrm - df.foc.nrm
+df.abs.dif.nrm <- abs(df.dif.nrm)
+
+### weight normal by density
+weighted.nrm <- apply(df.dif.nrm,2, function(x) x*theta.density)
+weighted.abs.nrm <- apply(df.abs.dif.nrm,2, function(x) x*theta.density)
+#now sum these
+
 
 SIDS <- colMeans(df.dif)
 UIDS <- colMeans(df.abs.dif)
 SIDS
 UIDS
+
+#### weight normal stuff by densities
+
+
+################ workspace
+temp = rnorm(100)
+temp
+describe(temp)
+
