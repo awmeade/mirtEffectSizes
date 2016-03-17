@@ -30,11 +30,11 @@ make.data <- function(N){
 
 N <- 1000
 dat <- make.data(N)
-group <- c(rep('D1', N), rep('D2', N))
+group <- c(rep('Foc', N), rep('Ref', N))
 
 
 
-
+foc.group <- 'Foc'
 itemnames <- colnames(dat)
 anc.items.names <- itemnames[c(2,8,9,10,12)]
 #test.items <- c(1,2:7,11,13:15)
@@ -45,7 +45,9 @@ coef(model_anchor,simplify = TRUE)
 theta <- fscores(model_anchor, full.scores = TRUE)
 focal.theta <- theta[1:N,]
 
-list.item_ES <- list()
+list.item_ES_foc <- list()
+list.item_ES_ref <- list()
+
 for(i in 1:ncol(dat)){
   foc.extract<-extract.item(model_anchor,i,group=1)
   ref.extract<-extract.item(model_anchor,i,group=2)
@@ -53,10 +55,21 @@ for(i in 1:ncol(dat)){
   foc.ES <- expected.item(foc.extract,focal.theta)
   ref.ES <- expected.item(ref.extract,focal.theta)
   
-  list.item_ES[[i]] <- data.frame(foc.ES,ref.ES)
+  list.item_ES_foc[[i]] <- foc.ES
+  list.item_ES_ref[[i]] <- ref.ES
 }
-list.item_ES
 
+df.ref <- do.call("cbind",list.item_ES_ref) 
+df.foc <- do.call("cbind",list.item_ES_foc) 
 
-lapply(list.item_ES,cor)
+head(df.ref)
+head(df.foc)
 
+df.dif <- df.ref - df.foc
+df.abs.dif <- abs(df.dif)
+head(df.dif)
+
+SIDS <- colMeans(df.dif)
+UIDS <- colMeans(df.abs.dif)
+SIDS
+UIDS
