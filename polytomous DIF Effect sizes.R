@@ -2,7 +2,7 @@ rm(list=ls())   # clear out old junk then read in data
 
 #first load some needed libraries
 library("psych")
-library("lessR")
+#library("lessR")
 library("mirt")
 
 # difficulty (b) = -d/a 
@@ -60,7 +60,7 @@ list.item_ES_ref.obs <- list()
 list.item_ES_foc.nrm <- list()
 list.item_ES_ref.nrm <- list()
 
-
+###### compute the expected scores (ES)
 for(i in 1:ncol(dat)){
   foc.extract<-extract.item(model_anchor,i,group=1)
   ref.extract<-extract.item(model_anchor,i,group=2)
@@ -73,9 +73,8 @@ for(i in 1:ncol(dat)){
   list.item_ES_ref.obs[[i]] <- ref.ES.obs
   list.item_ES_foc.nrm[[i]] <- foc.ES.nrm
   list.item_ES_ref.nrm[[i]] <- ref.ES.nrm
-  
 }
-
+# put these in dataframe
 df.ref.obs <- do.call("cbind",list.item_ES_ref.obs) 
 df.foc.obs <- do.call("cbind",list.item_ES_foc.obs) 
 df.ref.nrm <- do.call("cbind",list.item_ES_ref.nrm) 
@@ -87,6 +86,11 @@ head(df.foc.obs)
 df.foc.nrm
 df.ref.nrm
 
+#### means for each item in dataframe
+mean.ES.foc <- colMeans(df.foc.obs)
+mean.ES.ref <- colMeans(df.ref.obs)
+
+### dataframe of observed difference scores
 df.dif.obs <- df.ref.obs - df.foc.obs
 df.abs.dif.obs <- abs(df.dif.obs)
 SIDS <- colMeans(df.dif)
@@ -95,15 +99,14 @@ SIDS
 UIDS
 
 
-
+#### dataframe of normal dist difference scocres
 df.dif.nrm <- df.ref.nrm - df.foc.nrm
 df.abs.dif.nrm <- abs(df.dif.nrm)
 
-### weight normal by density
+# weight normal by density
 weighted.nrm <- apply(df.dif.nrm,2, function(x) x*theta.density)
 weighted.abs.nrm <- apply(df.abs.dif.nrm,2, function(x) x*theta.density)
-#now sum these
-SIDN <- colSums(weighted.nrm)
+SIDN <- colSums(weighted.nrm)           #now sum these
 UIDN <- colSums(weighted.abs.nrm)
 SIDN
 UIDN
@@ -117,8 +120,25 @@ get.max.D <- function(f.d){
   f.df.d.max <- c(f.max.D.theta,f.max.D)
   return(f.df.d.max)
 }
-
 list.max.D <- apply(df.dif.obs,2,get.max.D)
 list.max.D
+
+
+
+############# Cohen D section ###########
+df.mean.ES.foc.obs <- colMeans(df.foc.obs)
+df.mean.ES.ref.obs <- colMeans(df.ref.obs)
+df.sd.ES.foc.obs <- apply(df.foc.obs,2,sd) # get SD per sample
+df.sd.ES.ref.obs <- apply(df.ref.obs,2,sd)
+
+
+
+
+###### Test section #######
+test.ES.foc.obs <- rowMeans(df.foc.obs)
+test.ES.ref.obs <- rowMeans(df.ref.obs)
+test.ES.dif.obs <- test.ES.ref.obs - test.ES.foc.obs
+test.ES.dif.abs.obs <- abs(test.ES.dif.obs)
+
 
 
