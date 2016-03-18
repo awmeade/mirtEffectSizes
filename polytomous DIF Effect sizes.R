@@ -126,11 +126,24 @@ list.max.D
 
 
 ############# Cohen D section ###########
-df.mean.ES.foc.obs <- colMeans(df.foc.obs)
-df.mean.ES.ref.obs <- colMeans(df.ref.obs)
-df.sd.ES.foc.obs <- apply(df.foc.obs,2,sd) # get SD per sample
-df.sd.ES.ref.obs <- apply(df.ref.obs,2,sd)
+#pooled SD
+v.sd.foc <- apply(df.foc.obs,2,sd) # get SD per sample
+v.sd.ref <- apply(df.ref.obs,2,sd)
 
+f2 <- function(f2.d, f2.n){
+    f2.return <- (f2.d^2)*(f2.n-1)
+    return(f2.return)
+} 
+f.numerator.1 <- sapply(v.sd.foc,f2,N)
+f.numerator.2 <- sapply(v.sd.ref,f2,N)
+f.numerator <- f.numerator.1 + f.numerator.2
+f.denom <- 2*N - 2
+f.pooled.SD <- sqrt(f.numerator/f.denom)
+
+v.mean.ES.foc.obs <- colMeans(df.foc.obs)
+v.mean.ES.ref.obs <- colMeans(df.ref.obs)
+v.ESSD <- (v.mean.ES.ref.obs - v.mean.ES.foc.obs) / f.pooled.SD  
+rm(f.numerator.1,f.numerator.2,f.numerator,f.denom,f.pooled.SD)
 
 
 
