@@ -30,7 +30,7 @@ make.data <- function(N){
 
 N <- 1000
 dat <- make.data(N)
-group <- c(rep('Foc', N), rep('Ref', N))
+group <- c(rep('Ref', N), rep('Foc', N))
 
 
 
@@ -39,18 +39,18 @@ itemnames <- colnames(dat)
 anc.items.names <- itemnames[c(2,8,9,10,12)]
 #test.items <- c(1,2:7,11,13:15)
 model_anchor <- multipleGroup(dat, model = 1, group = group,
-  invariance = c(anc.items.names, 'free_means', 'free_var'))
+  invariance = c(anc.items.names, 'free_means', 'free_var'))  # sets mean of group 1 to 0 so ref as 2
 coef(model_anchor,simplify = TRUE)
 
 theta <- fscores(model_anchor, full.scores = TRUE)
-focal.theta <- theta[1:N,]
+focal.theta <- theta[(N+1):2000,]
 focal.theta.mean <- mean(focal.theta)
 
 
 
 #### quadrature nodes - just using base ####
 theta.normal   <- seq(-4,4,length=30)
-theta.den   <- dnorm(x,mean=focal.theta.mean, sd=1)
+theta.den   <- dnorm(theta.normal,mean=focal.theta.mean, sd=1)
 theta.density <- theta.den / sum(theta.den)
 rm(theta.den)
 
@@ -89,6 +89,13 @@ df.ref.nrm
 
 df.dif.obs <- df.ref.obs - df.foc.obs
 df.abs.dif.obs <- abs(df.dif.obs)
+SIDS <- colMeans(df.dif)
+UIDS <- colMeans(df.abs.dif)
+SIDS
+UIDS
+
+
+
 df.dif.nrm <- df.ref.nrm - df.foc.nrm
 df.abs.dif.nrm <- abs(df.dif.nrm)
 
@@ -96,18 +103,22 @@ df.abs.dif.nrm <- abs(df.dif.nrm)
 weighted.nrm <- apply(df.dif.nrm,2, function(x) x*theta.density)
 weighted.abs.nrm <- apply(df.abs.dif.nrm,2, function(x) x*theta.density)
 #now sum these
+SIDN <- colSums(weighted.nrm)
+UIDN <- colSums(weighted.abs.nrm)
+SIDN
+UIDN
 
+################## MAX D section ################
+get.max.D <- function(f.d){
+  f.d.abs <- abs(f.d)
+  f.max.D.location <- which.max(f.d.abs) #which.max returns location
+  f.max.D <- f.d[f.max.D.location]
+  f.max.D.theta <-  focal.theta[f.max.D.location] 
+  f.df.d.max <- c(f.max.D.theta,f.max.D)
+  return(f.df.d.max)
+}
 
-SIDS <- colMeans(df.dif)
-UIDS <- colMeans(df.abs.dif)
-SIDS
-UIDS
+list.max.D <- apply(df.dif.obs,2,get.max.D)
+list.max.D
 
-#### weight normal stuff by densities
-
-
-################ workspace
-temp = rnorm(100)
-temp
-describe(temp)
 
