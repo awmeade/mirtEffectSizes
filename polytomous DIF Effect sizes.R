@@ -19,8 +19,8 @@ make.data <- function(N){
   d1 <- d2 <- cbind(d, d-1, d-2)  # b parameters for both groups
   d2[13:15, ] <- d1[13:15, ] + 1  # here is the DIF
   itemtype <- rep('graded', nrow(a))
-  dataset1 <- simdata(a, d1, N, itemtype)
-  dataset2 <- simdata(a, d2, N, itemtype, mu=-1.0)
+  dataset1 <- simdata(a, d1, N, itemtype, mu=1.0)
+  dataset2 <- simdata(a, d2, N, itemtype)
   dat <- rbind(dataset1, dataset2)
   return(dat)
 }
@@ -39,35 +39,35 @@ itemnames <- colnames(dat)
 anc.items.names <- itemnames[c(2,8,9,10,12)]
 #test.items <- c(1,2:7,11,13:15)
 model_anchor <- multipleGroup(dat, model = 1, group = group,
-  invariance = c(anc.items.names, 'free_means', 'free_var'))  # sets mean of group 1 to 0 so ref as 2
+  invariance = c(anc.items.names, 'free_means', 'free_var'))  # sets mean of group 1 to 0 so ref as 1
 
 # get factor means from model
-coef <- coef(model_anchor,simplify = TRUE)
-theta.mean.1 <- coef[[1]][[2]]
-theta.mean.2 <- coef[[2]][[2]]
-theta.mean.dif <- theta.mean.2 - theta.mean.1 
-
-
-### focal thetas these will be input into the function, check their mean
+# coef <- coef(model_anchor,simplify = TRUE)
+# theta.mean.1 <- coef[[1]][[2]]
+# theta.mean.2 <- coef[[2]][[2]]
+# theta.mean.dif <- theta.mean.2 - theta.mean.1 
+# 
+# 
+# ### focal thetas these will be input into the function, check their mean
 theta.obs <- fscores(model_anchor, full.scores = TRUE)
 focal.theta.obs <- theta.obs[1:1000,]
 focal.theta.mean.obs <- mean(focal.theta.obs)
-
-theta.mean.dif
-focal.theta.mean.obs
-#set mean difference
-if(round(focal.theta.mean.obs,1) == 0){
-  use.focal.theta.mean = theta.mean.dif
-}else{
-  use.focal.theta.mean = focal.theta.mean.obs
-}
-use.focal.theta.mean
+# 
+# theta.mean.dif
+# focal.theta.mean.obs
+# #set mean difference
+# if(round(focal.theta.mean.obs,1) == 0){
+#   use.focal.theta.mean = theta.mean.dif
+# }else{
+#   use.focal.theta.mean = focal.theta.mean.obs
+# }
+# use.focal.theta.mean
 
 
 
 #### quadrature nodes - just using base R for this ####
 theta.normal   <- seq(-4,4,length=30)
-theta.den   <- dnorm(theta.normal,mean=use.focal.theta.mean, sd=1)
+theta.den   <- dnorm(theta.normal,mean=focal.theta.mean.obs, sd=1)
 theta.density <- theta.den / sum(theta.den)
 rm(theta.den)
 
@@ -171,7 +171,6 @@ for(i in 1:ncol(dat)){
 }
 #ESSD <- do.call("cbind",list.item_CohenD.obs) #dataframe 
 ESSD <- unlist(list.item_CohenD.obs) #vector
-# need to weight normal one
 
 
 ###### Test level observed  #######
@@ -186,7 +185,7 @@ UETSDS <- mean(test.ES.dif.abs.obs)
 ETSSD <- f.cohen.d(test.ES.ref.obs, test.ES.foc.obs) # cohen's D
 ETSSD
 
-
+test.Dmax <- get.max.D(test.ES.dif.obs)
 
 
 
@@ -194,25 +193,27 @@ ETSSD
 
 ############################### normal distribution ####################
 #### dataframe of normal dist difference scocres
-df.dif.nrm <- df.foc.nrm - df.ref.nrm
+df.dif.nrm <- df.foc.nrm - df.ref.nrm  # dif in ES at each level of theta
 df.abs.dif.nrm <- abs(df.dif.nrm)
 
 # weight normal by density
 weighted.dif.nrm <- apply(df.dif.nrm,2, function(x) x*theta.density)
 weighted.dif.abs.nrm <- apply(df.abs.dif.nrm,2, function(x) x*theta.density)
-SIDN <- colSums(weighted.nrm)           #now sum these
-UIDN <- colSums(weighted.abs.nrm)
+SIDN <- colSums(weighted.dif.nrm)           #now sum these
+UIDN <- colSums(weighted.dif.abs.nrm)
 SIDN
 UIDN
 
+# test level
 test.ES.foc.nrm <- rowSums(df.foc.nrm)  ### sum across items at each theta
 test.ES.ref.nrm <- rowSums(df.ref.nrm)  ### sum across items at each theta
 test.ES.dif.nrm <- rowSums(df.dif.nrm)  ### dif at each theta
 
 #test.dif.nrm <- rowSums(df.dif.nrm)  # sum across items
-test.dif.nrm.weighted <- test.ES.dif.nrm*theta.density
-Starks.DTF <- sum(test.dif.nrm.weighted)
+
+Starks.DTF <- sum(test.ES.dif.nrm*theta.density)
 
 #test.dif.abs.nrm <- rowMeans(df.abs.dif.nrm) #avg across items
-
-
+test.ES.abs.dif.nrm <- rowSums(df.abs.dif.nrm)
+UDTFR <- sum(test.ES.abs.dif.nrm*theta.density)
+UETSDN <- sum(test.ES.dif.nrm*theta.density)
