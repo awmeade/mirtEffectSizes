@@ -24,7 +24,6 @@ make.data <- function(N){
 }
 
 ################################################# END FUNCTIONS ########################
-source("effect.sizes.R")
 
 N <- 1000
 dat <- make.data(N)
@@ -38,7 +37,15 @@ model_anchor <- multipleGroup(dat, model = 1, group = group,
   invariance = c(anc.items.names, 'free_means', 'free_var'))  # sets mean of group 1 to 0 so ref as 1
 # ### focal thetas these will be input into the function, check their mean
 theta.obs <- fscores(model_anchor, full.scores = TRUE)
-focal.thetas <- theta.obs[1:1000,]
+focal.thetas <- theta.obs[1001:2000,]
 
+source("effect.size.function.R")
 effect.sizes.out <- f.effect.sizes(focal.theta.obs = focal.thetas, model = model_anchor)
 effect.sizes.out
+
+#temp stuff
+# ref.coef <- coef(model_anchor,simplify = TRUE)[[1]][[1]]
+# foc.coef <- coef(model_anchor,simplify = TRUE)[[2]][[1]]
+# foc.coef
+# ref.coef
+# write.csv(focal.thetas,"temp.csv")
