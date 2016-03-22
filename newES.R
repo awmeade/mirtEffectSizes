@@ -1,6 +1,10 @@
 #' Empirical effect sizes based on latent trait estimates
 #'
-#' Description FIXME!
+#' Description:  Computes effect size measures of differential item functioning and differential 
+#' test/bundle functioning based on expected scores from Meade (2010).
+#' Item parameters from both reference and focal group are used in conjunction with 
+#' focal group empriical theta estimates (and an assumed normally distributed theta)
+#' to compute expected scores. 
 #'
 #' @param mod a multipleGroup object which estimated only 2 groups
 #' @param focal_items a numeric vector indicating which items to include the tests. The
@@ -22,8 +26,8 @@
 #'
 #' @author Adam Meade and Phil Chalmers \email{rphilip.chalmers@@gmail.com}
 #' @references
-#' Meade, A. (2010)...... #FIXME
-#'
+#'   Meade, A. W. (2010).  A taxonomy of effect size measures for the differential functioning 
+#'   of items and scales. Journal of Applied Psychology, 95, 728-743.
 #' @export empirical_ES
 #' @examples
 #' \dontrun{
@@ -51,7 +55,6 @@
 #'
 #' ###---------------------------------------------
 #DIF
-library('mirt')
 #' set.seed(12345)
 #' a1 <- a2 <- matrix(abs(rnorm(15,1,.3)), ncol=1)
 #' d1 <- d2 <- matrix(rnorm(15,0,.7),ncol=1)
@@ -197,45 +200,51 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     df.test.output <- data.frame(out.test.names,out.test.stats)
     names(df.test.output) <- c("Effect Size","Value")
     ret.list<-list(test.level.results = df.test.output)
-    
+  
     if(item_level){
       ret.list[[length(ret.list)+1]]<-df.item.output
       names(ret.list)[length(ret.list)]<-"item.level.results"
-      if(plot){
+    }#end if item_level
+    if(plot){
+      if(item_level){
         list.item.plots <- list()
-        ## return plot object. mirt imports lattice so those functions can be used if you are comfortable
         for(i in 1:nitems){
           plot.df1 <- data.frame(Theta=Theta.focal[,1],ES=df.foc.obs[,i],group='foc')
           plot.df2 <- data.frame(Theta=Theta.focal[,1],ES=df.ref.obs[,i],group='ref')
           plot.df <- rbind(plot.df1,plot.df2)
           #plot.df <- data.frame(focal.theta.obs,df.foc.obs[,i],df.ref.obs[,i])
           my.name<-paste0("Expected scores, Item ",i)
+          mykey <- list(space = 'top',
+                columns = 2,
+                text = list(as.character(unique(plot.df$group))),
+                points = list(pch = 1, col=c("red","black"))
+          )
           list.item.plots[[i]] <- xyplot(plot.df$ES~plot.df$Theta,
-                              xlab="Focal Group Theta",
-                              ylab="Expected Score",
-                              groups=group ,
-                              col=c("red","black"),
-                              key = mykey,
-                              jitter.y=TRUE,
-                              main=my.name)
+                 xlab="Focal Group Theta",
+                 ylab="Expected Score",
+                 groups=plot.df$group ,
+                 col=c("red","black"),
+                 key = mykey,
+                 jitter.y=TRUE,
+                               main=my.name)
         }#end item loop
         ret.list[[(length(ret.list)+1)]]<-list.item.plots
         names(ret.list)[length(ret.list)]<-"ES plots"
-      }#end if plot
-    }#end if item_level
-    if(plot){  # DTF plot
+      }
+      
+      
       plot.df1 <- data.frame(Theta=Theta.focal[,1],ETS=ETS.foc.obs,group='foc')
       plot.df2 <- data.frame(Theta=Theta.focal[,1],ETS=ETS.ref.obs,group='ref')
       plot.df <- rbind(plot.df1,plot.df2)
       mykey <- list(space = 'top',
-                    columns = nlevels(plot.df$group),
-                    text = list(as.character(unique(plot.df$group))),
-                    points = list(pch = 1, col=c("red","black"))
-      ) 
+            columns = 2,
+            text = list(as.character(unique(plot.df$group))),
+            points = list(pch = 1, col=c("red","black"))
+      )
       test.plot <- xyplot(plot.df$ETS~plot.df$Theta,
                           xlab="Focal Group Theta",
                           ylab="Expected Test Score",
-                          groups=group ,
+                          groups=plot.df$group ,
                           col=c("red","black"),
                           key = mykey,
                           jitter.y=TRUE,
@@ -243,6 +252,5 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
       ret.list[[(length(ret.list)+1)]]<-test.plot
       names(ret.list)[length(ret.list)]<-"ETS plot"
     }# end if plot
-    
     return(ret.list)
 }

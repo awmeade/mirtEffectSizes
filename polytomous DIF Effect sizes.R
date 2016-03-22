@@ -36,11 +36,9 @@ anc.items.names <- itemnames[c(2,8,9,10,12)]
 model_anchor <- multipleGroup(dat, model = 1, group = group,
   invariance = c(anc.items.names, 'free_means', 'free_var'))  # sets mean of group 1 to 0 so ref as 1
 # ### focal thetas these will be input into the function, check their mean
-theta.obs <- fscores(model_anchor, full.scores = TRUE)
-focal.thetas <- theta.obs[1001:2000,]
 
-source("effect.size.function.R")
-effect.sizes.out <- f.effect.sizes(focal.theta.obs = focal.thetas, model = model_anchor)
+source("newES.R")
+effect.sizes.out <- empirical_ES(mod = model_anchor)
 effect.sizes.out
 
 #temp stuff
