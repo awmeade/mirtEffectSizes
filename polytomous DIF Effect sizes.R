@@ -37,13 +37,7 @@ model_anchor <- multipleGroup(dat, model = 1, group = group,
   invariance = c(anc.items.names, 'free_means', 'free_var'))  # sets mean of group 1 to 0 so ref as 1
 # ### focal thetas these will be input into the function, check their mean
 
-source("newES.R")
+source("empirical_ES.R")
 effect.sizes.out <- empirical_ES(mod = model_anchor)
-effect.sizes.out
-
-#temp stuff
-# ref.coef <- coef(model_anchor,simplify = TRUE)[[1]][[1]]
-# foc.coef <- coef(model_anchor,simplify = TRUE)[[2]][[1]]
-# foc.coef
-# ref.coef
-# write.csv(focal.thetas,"temp.csv")
+effect.sizes.out$test.level.results
+effect.sizes.out$item.level.results

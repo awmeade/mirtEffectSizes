@@ -28,7 +28,7 @@
 #' @references
 #'   Meade, A. W. (2010).  A taxonomy of effect size measures for the differential functioning 
 #'   of items and scales. Journal of Applied Psychology, 95, 728-743.
-#' @export empirical_ES
+#' @export empirical_ES, empirical_ES$test.level.results, empirical_ES$item.level.results
 #' @examples
 #' \dontrun{
 #'
