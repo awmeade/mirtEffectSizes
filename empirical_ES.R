@@ -113,14 +113,14 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
       f.d.abs <- abs(f.d)
       f.max.D.location <- which.max(f.d.abs) #which.max returns location
       f.max.D <- f.d[f.max.D.location]
-      f.max.D.theta <-  focal.theta.obs[f.max.D.location] 
+      f.max.D.theta <-  Theta.focal[f.max.D.location] 
       f.df.d.max <- c(f.max.D.theta,f.max.D)
       return(f.df.d.max)
     }
 
   # item level stuff needed for test
     focal.theta.mean.obs <- mean(Theta.focal)
-    #order(focal.theta.obs)
+    #order(Theta.focal)
     
     #### quadrature nodes - just using base R for this ####
     theta.normal   <- seq(theta_lim[1],theta_lim[2],length=npts)
@@ -138,8 +138,8 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     for(i in 1:nitems){
       foc.extract<-extract.item(mod,i,group=2)
       ref.extract<-extract.item(mod,i,group=1)
-      foc.ES.obs <- expected.item(foc.extract,focal.theta.obs)
-      ref.ES.obs <- expected.item(ref.extract,focal.theta.obs)
+      foc.ES.obs <- expected.item(foc.extract,Theta.focal)
+      ref.ES.obs <- expected.item(ref.extract,Theta.focal)
       foc.ES.nrm <- expected.item(foc.extract,theta.normal)
       ref.ES.nrm <- expected.item(ref.extract,theta.normal)
       
@@ -169,7 +169,6 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     item.max.D <- apply(df.dif.obs,2,get.max.D)
     mat.item.max.d <- t(item.max.D)
     colnames(mat.item.max.d) <- c('theta of max D',"max D")
-    mat.item.max.d
     
     list.item_CohenD.obs <- list()
     for(i in 1:nitems){
@@ -227,22 +226,23 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     if(plot){  # DTF plot
     
     
-    plot.df1 <- data.frame(focal.theta.obs,ETS=ETS.foc.obs,group='foc')
-    plot.df2 <- data.frame(focal.theta.obs,ETS=ETS.ref.obs,group='ref')
-    plot.df <- rbind(plot.df1,plot.df2)
-    mykey <- list(space = 'top',
-                  columns = nlevels(plot.df$group),
-                  text = list(as.character(unique(plot.df$group))),
-                  points = list(pch = 1, col=c("red","black"))
-    ) 
-    test.plot <- xyplot(plot.df$ETS~plot.df$focal.theta.obs,
-          xlab="Focal Group Theta",
-          ylab="Expected Test Score",
-          groups=group ,
-          col=c("red","black"),
-          key = mykey)
-      ret.list[[(length(ret.list)+1)]]<-test.plot
-      names(ret.list)[length(ret.list)]<-"ETS plot"
+      plot.df1 <- data.frame(Theta.focal,ETS=ETS.foc.obs,group='foc')
+      plot.df2 <- data.frame(Theta.focal,ETS=ETS.ref.obs,group='ref')
+      plot.df <- rbind(plot.df1,plot.df2)
+      plot.df <- plot.df[order(Theta.focal),]
+      mykey <- list(space = 'top',
+            columns = nlevels(plot.df$group),
+            text = list(as.character(unique(plot.df$group))),
+            points = list(pch = 1, col=c("red","black"))
+      ) 
+      test.plot <- xyplot(plot.df$ETS~plot.df$Theta.focal,
+            xlab="Focal Group Theta",
+            ylab="Expected Test Score",
+            groups=group ,
+            col=c("red","black"),
+            key = mykey)
+        ret.list[[(length(ret.list)+1)]]<-test.plot
+        names(ret.list)[length(ret.list)]<-"ETS plot"
     }
     
     
@@ -255,14 +255,14 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
       #   for(i in 1:nitems){
       #     #  head(df.ref.obs)
       #     #head(df.foc.obs)
-      #     plot.df <- data.frame(focal.theta.obs,df.foc.obs[,i],df.ref.obs[,i])
-      #     plot.df <- plot.df[order(focal.theta.obs),]
+      #     plot.df <- data.frame(Theta.focal,df.foc.obs[,i],df.ref.obs[,i])
+      #     plot.df <- plot.df[order(Theta.focal),]
       #     the.name <- paste0("Item ",i)
-      #     plot(plot.df$focal.theta.obs,plot.df[,3], 
+      #     plot(plot.df$Theta.focal,plot.df[,3], 
       #          type="o",xlab="Focal Group Theta",
       #          ylab="Expected Score",
       #          main=the.name)
-      #     points(plot.df$focal.theta.obs,plot.df[,2],col="red")
+      #     points(plot.df$Theta.focal,plot.df[,2],col="red")
       #     legend("topleft",pch=c(1,1),legend=c("ref","foc"),col=c("black","red"))
       #   }
       #   
