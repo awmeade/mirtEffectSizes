@@ -52,28 +52,24 @@
 #' ###---------------------------------------------
 #DIF
 library('mirt')
-set.seed(12345)
-a1 <- a2 <- matrix(abs(rnorm(15,1,.3)), ncol=1)
-d1 <- d2 <- matrix(rnorm(15,0,.7),ncol=1)
-a2[10:15,] <- a2[10:15,] + rnorm(6, 0, .3)
-d2[10:15,] <- d2[10:15,] + rnorm(6, 0, .3)
-itemtype <- rep('dich', nrow(a1))
-N <- 1000
-dataset1 <- simdata(a1, d1, N, itemtype)
-dataset2 <- simdata(a2, d2, N, itemtype, mu = .1, sigma = matrix(1.5))
-dat <- rbind(dataset1, dataset2)
-group <- c(rep('Ref', N), rep('Focal', N))
-
-mod <- multipleGroup(dat, 1, group = group,
-   invariance = c(colnames(dat)[1:5], 'free_means', 'free_var'))
-coef(mod, simplify=TRUE)
-
-empirical_ES(mod)
-empirical_ES(mod, item_level = FALSE)
-
-empirical_ES(mod, plot=FALSE)
-empirical_ES(mod, plot=FALSE, item_level = FALSE)
-
+#' set.seed(12345)
+#' a1 <- a2 <- matrix(abs(rnorm(15,1,.3)), ncol=1)
+#' d1 <- d2 <- matrix(rnorm(15,0,.7),ncol=1)
+#' a2[10:15,] <- a2[10:15,] + rnorm(6, 0, .3)
+#' d2[10:15,] <- d2[10:15,] + rnorm(6, 0, .3)
+#' itemtype <- rep('dich', nrow(a1))
+#' N <- 1000
+#' dataset1 <- simdata(a1, d1, N, itemtype)
+#' dataset2 <- simdata(a2, d2, N, itemtype, mu = .1, sigma = matrix(1.5))
+#' dat <- rbind(dataset1, dataset2)
+#' group <- c(rep('Ref', N), rep('Focal', N))
+# mod <- multipleGroup(dat, 1, group = group,
+#    invariance = c(colnames(dat)[1:5], 'free_means', 'free_var'))
+# coef(mod, simplify=TRUE)
+# empirical_ES(mod)
+# empirical_ES(mod, item_level = FALSE)
+# empirical_ES(mod, plot=FALSE)
+# empirical_ES(mod, plot=FALSE, item_level = FALSE)
 #' }
 #' 
 #' 
@@ -90,9 +86,6 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     } else Theta.focal <- as.matrix(Theta.focal)
     if(sum(focal_select) != nrow(Theta.focal))  
         stop('Theta elements do not match the number of individuals in the focal group')
-
-   
-    
     ############# helper function -  Cohen D ###########
     f.cohen.d <- function (vector.1,vector.2){
       f.mean.v1 <- mean(vector.1)
@@ -107,33 +100,26 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
       f.return <- (f.mean.v1 - f.mean.v2) / f.sd.pooled
       return(f.return)
     }
-    
     ############# helper function -  Max D ###########
     get.max.D <- function(f.d){
       f.d.abs <- abs(f.d)
       f.max.D.location <- which.max(f.d.abs) #which.max returns location
       f.max.D <- f.d[f.max.D.location]
-      f.max.D.theta <-  Theta.focal[f.max.D.location] 
+      f.max.D.theta <-  Theta.focal[f.max.D.location] # this is a global
       f.df.d.max <- c(f.max.D.theta,f.max.D)
       return(f.df.d.max)
     }
-
-  # item level stuff needed for test
+    # item level DF
     focal.theta.mean.obs <- mean(Theta.focal)
-    #order(focal.theta.obs)
-    
-    #### quadrature nodes - just using base R for this ####
+    #### quadrature nodes ####
     theta.normal   <- seq(theta_lim[1],theta_lim[2],length=npts)
     theta.den   <- dnorm(theta.normal,mean=focal.theta.mean.obs, sd=1)
     theta.density <- theta.den / sum(theta.den)
-    rm(theta.den)
-    
     nitems <- length(focal_items)
     list.item_ES_foc.obs <- list()
     list.item_ES_ref.obs <- list()
     list.item_ES_foc.nrm <- list()
     list.item_ES_ref.nrm <- list()
-    
     ###### compute the expected scores (ES)
     for(i in 1:nitems){
       foc.extract<-extract.item(mod,i,group=2)
@@ -142,7 +128,6 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
       ref.ES.obs <- expected.item(ref.extract,Theta.focal)
       foc.ES.nrm <- expected.item(foc.extract,theta.normal)
       ref.ES.nrm <- expected.item(ref.extract,theta.normal)
-      
       list.item_ES_foc.obs[[i]] <- foc.ES.obs
       list.item_ES_ref.obs[[i]] <- ref.ES.obs
       list.item_ES_foc.nrm[[i]] <- foc.ES.nrm
@@ -154,11 +139,9 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     df.foc.obs <- do.call("cbind",list.item_ES_foc.obs) 
     df.ref.nrm <- do.call("cbind",list.item_ES_ref.nrm) 
     df.foc.nrm <- do.call("cbind",list.item_ES_foc.nrm) 
-    
     #### means for each item in dataframe
     mean.ES.foc <- colMeans(df.foc.obs)
     mean.ES.ref <- colMeans(df.ref.obs)
-        
     ### dataframe of observed difference scores
     df.dif.obs <- df.foc.obs - df.ref.obs
     df.abs.dif.obs <- abs(df.dif.obs)
@@ -170,7 +153,6 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     mat.item.max.d <- t(item.max.D)
     colnames(mat.item.max.d) <- c('theta of max D',"max D")
     mat.item.max.d
-    
     list.item_CohenD.obs <- list()
     for(i in 1:nitems){
       list.item_CohenD.obs[i] <- f.cohen.d(df.foc.obs[,i],df.ref.obs[,i])
@@ -180,39 +162,31 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     df.dif.nrm <- df.foc.nrm - df.ref.nrm        # DF in ES at each level of theta
     weighted.dif.nrm <- apply(df.dif.nrm,2, function(x) x*theta.density)
     SIDN <- colSums(weighted.dif.nrm)           #now sum these
-    
     df.abs.dif.nrm <- abs(df.dif.nrm)            # abs(DF in ES at each level of theta) 
     weighted.dif.abs.nrm <- apply(df.abs.dif.nrm,2, function(x) x*theta.density)
     UIDN <- colSums(weighted.dif.abs.nrm)
-    
     df.item.output <- round(data.frame(SIDS,UIDS,SIDN,UIDN,ESSD,mat.item.max.d,mean.ES.foc,mean.ES.ref),3)
     row.names(df.item.output)<-paste0("item.",1:nrow(df.item.output))
     
-    
-#DTF goes here. output df in list [1]
+    ##################DTF####################
     STDS <- sum(SIDS)
     UTDS <- sum(UIDS)
-    
     ##### UETSDS
     ETS.foc.obs <- rowSums(df.foc.obs)  ### test ES (avg across items)
     ETS.ref.obs <- rowSums(df.ref.obs)  ### test ES (avg across items)
     ETS.dif.obs <- ETS.foc.obs - ETS.ref.obs  ### df in test scores
     UETSDS <- mean(abs(ETS.dif.obs))    ### no cancel across theta, yes across items
     ##### 
-    
     #cohen D and D max
     ETSSD <- f.cohen.d(ETS.foc.obs, ETS.ref.obs) # cohen's D
     test.Dmax <- get.max.D(ETS.dif.obs)
- 
     ############# test level
     ETS.abs.dif.nrm <- rowSums(df.abs.dif.nrm) # [abs(DF in ES at each level of theta)] summed across items
     UDTFR <- sum(ETS.abs.dif.nrm*theta.density)
     UDTFR.b <- sum(UIDN)
-    
     ETS.dif.nrm <- rowSums(df.dif.nrm)  ### ETS dif at each theta, summed across items
     Starks.DTFR <- sum(ETS.dif.nrm*theta.density)
     Starks.DTFR.b <- sum(SIDN)
-    
     ETS.foc.nrm <- rowSums(df.foc.nrm)  ### ETS at each theta (df cancels across items)
     ETS.ref.nrm <- rowSums(df.ref.nrm)  ### ETS at each theta (df cancels across items)
     ETS.dif.nrm <- ETS.foc.nrm - ETS.ref.nrm   ### DF in ETS at each theta
@@ -222,61 +196,53 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     out.test.names <- c("STDS","UTDS","UETSDS","ETSSD","Starks.DTFR","UDTFR","UETSDN","theta.of.max.test.D","Test.Dmax")
     df.test.output <- data.frame(out.test.names,out.test.stats)
     names(df.test.output) <- c("Effect Size","Value")
-    
     ret.list<-list(test.level.results = df.test.output)
-    if(plot){  # DTF plot
-    
-    
-    plot.df1 <- data.frame(Theta=Theta.focal[,1],ETS=ETS.foc.obs,group='foc')
-    plot.df2 <- data.frame(Theta=Theta.focal[,1],ETS=ETS.ref.obs,group='ref')
-    plot.df <- rbind(plot.df1,plot.df2)
-    mykey <- list(space = 'top',
-                  columns = nlevels(plot.df$group),
-                  text = list(as.character(unique(plot.df$group))),
-                  points = list(pch = 1, col=c("red","black"))
-    ) 
-    test.plot <- xyplot(plot.df$ETS~plot.df$Theta,
-          xlab="Focal Group Theta",
-          ylab="Expected Test Score",
-          groups=group ,
-          col=c("red","black"),
-          key = mykey)
-      ret.list[[(length(ret.list)+1)]]<-test.plot
-      names(ret.list)[length(ret.list)]<-"ETS plot"
-    }
-    
     
     if(item_level){
       ret.list[[length(ret.list)+1]]<-df.item.output
       names(ret.list)[length(ret.list)]<-"item.level.results"
-      
-      # if(plot){
-      #   ## return plot object. mirt imports lattice so those functions can be used if you are comfortable
-      #   for(i in 1:nitems){
-      #     #  head(df.ref.obs)
-      #     #head(df.foc.obs)
-      #     plot.df <- data.frame(focal.theta.obs,df.foc.obs[,i],df.ref.obs[,i])
-      #     plot.df <- plot.df[order(focal.theta.obs),]
-      #     the.name <- paste0("Item ",i)
-      #     plot(plot.df$focal.theta.obs,plot.df[,3], 
-      #          type="o",xlab="Focal Group Theta",
-      #          ylab="Expected Score",
-      #          main=the.name)
-      #     points(plot.df$focal.theta.obs,plot.df[,2],col="red")
-      #     legend("topleft",pch=c(1,1),legend=c("ref","foc"),col=c("black","red"))
-      #   }
-      #   
-      #   
-      #   
-      #   plot <- lattice::xyplot()
-      #   return(plot)
-       #   ret.list<-c(ret.list,list.item.plots)
-      
-      
-      # }
-      
-      
-    }
+      if(plot){
+        list.item.plots <- list()
+        ## return plot object. mirt imports lattice so those functions can be used if you are comfortable
+        for(i in 1:nitems){
+          plot.df1 <- data.frame(Theta=Theta.focal[,1],ES=df.foc.obs[,i],group='foc')
+          plot.df2 <- data.frame(Theta=Theta.focal[,1],ES=df.ref.obs[,i],group='ref')
+          plot.df <- rbind(plot.df1,plot.df2)
+          #plot.df <- data.frame(focal.theta.obs,df.foc.obs[,i],df.ref.obs[,i])
+          my.name<-paste0("Expected scores, Item ",i)
+          list.item.plots[[i]] <- xyplot(plot.df$ES~plot.df$Theta,
+                              xlab="Focal Group Theta",
+                              ylab="Expected Score",
+                              groups=group ,
+                              col=c("red","black"),
+                              key = mykey,
+                              jitter.y=TRUE,
+                              main=my.name)
+        }#end item loop
+        ret.list[[(length(ret.list)+1)]]<-list.item.plots
+        names(ret.list)[length(ret.list)]<-"ES plots"
+      }#end if plot
+    }#end if item_level
+    if(plot){  # DTF plot
+      plot.df1 <- data.frame(Theta=Theta.focal[,1],ETS=ETS.foc.obs,group='foc')
+      plot.df2 <- data.frame(Theta=Theta.focal[,1],ETS=ETS.ref.obs,group='ref')
+      plot.df <- rbind(plot.df1,plot.df2)
+      mykey <- list(space = 'top',
+                    columns = nlevels(plot.df$group),
+                    text = list(as.character(unique(plot.df$group))),
+                    points = list(pch = 1, col=c("red","black"))
+      ) 
+      test.plot <- xyplot(plot.df$ETS~plot.df$Theta,
+                          xlab="Focal Group Theta",
+                          ylab="Expected Test Score",
+                          groups=group ,
+                          col=c("red","black"),
+                          key = mykey,
+                          jitter.y=TRUE,
+                          main="Expected Test Scores")
+      ret.list[[(length(ret.list)+1)]]<-test.plot
+      names(ret.list)[length(ret.list)]<-"ETS plot"
+    }# end if plot
     
     return(ret.list)
 }
