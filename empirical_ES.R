@@ -1,34 +1,79 @@
 #' Empirical effect sizes based on latent trait estimates
 #'
-#' Description:  Computes effect size measures of differential item functioning and differential 
+#' Computes effect size measures of differential item functioning and differential
 #' test/bundle functioning based on expected scores from Meade (2010).
-#' Item parameters from both reference and focal group are used in conjunction with 
-#' focal group empriical theta estimates (and an assumed normally distributed theta)
-#' to compute expected scores. 
+#' Item parameters from both reference and focal group are used in conjunction with
+#' focal group empirical theta estimates (and an assumed normally distributed theta)
+#' to compute expected scores.
+#'
+#' Details: Default DIF = TRUE produces several effect sizes indices at the item level.
+#' Signed indices allow DIF favoring the focal group at one point on the theta 
+#' distribution to cancel DIF favoring the reference group at another point on the theta
+#' distribution. Unsigned indices take the absolute value before summing or averaging, 
+#' thus not allowing cancelation of DIF across theta. 
+#' SIDS = Signed Item Difference in the Sample. The average difference in expected scores
+#' across the focal sample using both focal and reference group item parameters.
+#' UIDS = Unsigned Item Difference in the Sample. Same as SIDS except absolute value of 
+#' expected scores is taken prior to averging across the sample.
+#' D-Max = The maximum difference in expected scores in the sample.
+#' ESSD = Expected Score Standardized Difference.Cohen's D for difference in expected scores.
+#' SIDN = Signed Item Difference in a Normal distribution. Identical to SIDS but 
+#' averaged across a normal distribution rather than the sample.
+#' UIDN = Unsigned Item Difference in a Normal distribution. Identical to UIDS but 
+#' averaged across a normal distribution rather than the sample.
+#' 
+#' DIF = FALSE produces a series of test/bundle-level indices that are based on item-level
+#' indices.
+#' STDS = Signed Test Differences in the Sample. The sum of the SIDS across items.
+#' UTDS = Unsigned Test Differences in the Sample. The sum of the UIDS across items.
+#' Stark's DTFR = Stark's version of STDS using a normal distribution rather than 
+#' sample estimated thetas.
+#' UDTFR = Unsigned Expected Test Scores Differences in the Sample. The difference 
+#' inobserved summed scale scores expected, onaverage, across ahypothetical focal 
+#' grou pwith anormally distributed theta, had DF been uniform innature for all items
+#' UETSDS = Unsigned Expected Test Score Differences in a Normal distribution. 
+#' The hypothetical difference inexpected scale scores that would have been present if
+#' scale-level DF had been uniform across respondents (i.e., always favoring the 
+#' focal group).
+#' UETSDN = Identical to UETSDS but computed using anormal distribution.
+#' Test D-Max = Maximum expected test score differences in the sample.
+#' ETSSD = Expected Test Score Standardized Difference. Cohen's D for expected 
+#' test scores.
+#'  
+#' Plot = TRUE
+#' Expected score plots using focal group estimated thetas and estimated item parameters
+#' for both the reference and focal groups.
+#' 
+#' 
+#'     
+#' . Sperate descriptions whether DIF = TRUE/FALSE
+#' (for DBF/DTF measures as well)
 #'
 #' @param mod a multipleGroup object which estimated only 2 groups
 #' @param focal_items a numeric vector indicating which items to include the tests. The
 #'   default uses all of the items. Selecting fewer items will result in tests of
-#'   'differential bundle functioning' when \code{item_level = FALSE}
+#'   'differential bundle functioning' when \code{DIF = FALSE}
 #' @param npts number of points to use in the integration. Default is 61
 #' @param theta_lim lower and upper limits of the latent trait (theta) to be evaluated, and is
 #'   used in conjunction with \code{npts}
 #' @param Theta.focal an optional matrix of Theta values from the focal group to be evaluated. If not supplied
 #'   the default values to \code{\link{fscores}} will be used in conjunction with the \code{...}
 #'   arguments passed
-#' @param item_level logical; return a data.frame of item-level imputation properties? If \code{FALSE},
+#' @param DIF logical; return a data.frame of item-level imputation properties? If \code{FALSE},
 #'   only DBF and DTF statistics will be reported
 #' @param ref.group either 1 or 2 to indicate which group is considered the 'reference' group. Default
 #'   is 1
-#' @param plot logical; plot expected scores of items/test where expected scores are computed 
-#'  using focal group thetas and both focal and reference group item parameters 
-#' @param ... additional arguments to be passed to \code{\link{fscores}}
+#' @param plot logical; plot expected scores of items/test where expected scores are computed
+#'  using focal group thetas and both focal and reference group item parameters
+#' @param par.strip.text plotting argument passed to \code{\link{lattice}}
+#' @param par.settings plotting argument passed to \code{\link{lattice}}
+#' @param ... additional arguments to be passed to \code{\link{fscores}} and \code{\link{xyplot}}
 #'
 #' @author Adam Meade and Phil Chalmers \email{rphilip.chalmers@@gmail.com}
 #' @references
-#'   Meade, A. W. (2010).  A taxonomy of effect size measures for the differential functioning 
-#'   of items and scales. Journal of Applied Psychology, 95, 728-743.
-#' @export empirical_ES, empirical_ES$test.level.results, empirical_ES$item.level.results
+#'   Meade, A. W. (2010).  A taxonomy of effect size measures for the differential functioning
+#'   of items and scales. \emph{Journal of Applied Psychology, 95}, 728-743.
+#' @export empirical_ES
 #' @examples
 #' \dontrun{
 #'
@@ -49,12 +94,13 @@
 #'
 #' empirical_ES(mod)
 #' empirical_ES(mod, DIF=FALSE)
+#' empirical_ES(mod, DIF=FALSE, focal_items = 10:15)
 #'
 #' empirical_ES(mod, plot=TRUE)
 #' empirical_ES(mod, plot=TRUE, DIF=FALSE)
 #'
 #' ###---------------------------------------------
-#DIF
+#' # DIF
 #' set.seed(12345)
 #' a1 <- a2 <- matrix(abs(rnorm(15,1,.3)), ncol=1)
 #' d1 <- d2 <- matrix(rnorm(15,0,.7),ncol=1)
@@ -66,29 +112,34 @@
 #' dataset2 <- simdata(a2, d2, N, itemtype, mu = .1, sigma = matrix(1.5))
 #' dat <- rbind(dataset1, dataset2)
 #' group <- c(rep('Ref', N), rep('Focal', N))
-# mod <- multipleGroup(dat, 1, group = group,
-#    invariance = c(colnames(dat)[1:5], 'free_means', 'free_var'))
-# coef(mod, simplify=TRUE)
-# empirical_ES(mod)
-# empirical_ES(mod, item_level = FALSE)
-# empirical_ES(mod, plot=FALSE)
-# empirical_ES(mod, plot=FALSE, item_level = FALSE)
+#'
+#' mod <- multipleGroup(dat, 1, group = group,
+#'    invariance = c(colnames(dat)[1:5], 'free_means', 'free_var'))
+#' coef(mod, simplify=TRUE)
+#'
+#' empirical_ES(mod)
+#' empirical_ES(mod, DIF = FALSE)
+#' empirical_ES(mod, plot=TRUE)
+#' empirical_ES(mod, plot=TRUE, DIF=FALSE)
+#'
 #' }
-#' 
-#' 
 empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(mod, 'nitems'),
-                 item_level = TRUE, npts = 61, theta_lim=c(-6,6), ref.group = 1, plot=TRUE){
+                 DIF = TRUE, npts = 61, theta_lim=c(-6,6), ref.group = 1, plot=FALSE,
+                 par.strip.text = list(cex = 0.7),
+                 par.settings = list(strip.background = list(col = '#9ECAE1'),
+                                     strip.border = list(col = "black")), ...){
     stopifnot(extract.mirt(mod, 'nfact') == 1L)
     stopifnot(extract.mirt(mod, 'ngroups') == 2L)
     ref <- extract.group(mod, ref.group)
     focal <- extract.group(mod, ifelse(ref.group == 1, 2, 1))
     focal_select <- extract.mirt(mod, 'group') != extract.mirt(mod, 'groupNames')[ref.group]
     if(is.null(Theta.focal)){
-        Theta <- fscores(mod, full.scores = TRUE, full.scores.SE = FALSE)
+        Theta <- fscores(mod, full.scores = TRUE, full.scores.SE = FALSE, ...)
         Theta.focal <- Theta[focal_select, , drop = FALSE]
     } else Theta.focal <- as.matrix(Theta.focal)
-    if(sum(focal_select) != nrow(Theta.focal))  
+    if(sum(focal_select) != nrow(Theta.focal))
         stop('Theta elements do not match the number of individuals in the focal group')
+
     ############# helper function -  Cohen D ###########
     f.cohen.d <- function (vector.1,vector.2){
       f.mean.v1 <- mean(vector.1)
@@ -112,6 +163,7 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
       f.df.d.max <- c(f.max.D.theta,f.max.D)
       return(f.df.d.max)
     }
+
     # item level DF
     focal.theta.mean.obs <- mean(Theta.focal)
     #### quadrature nodes ####
@@ -125,8 +177,8 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     list.item_ES_ref.nrm <- list()
     ###### compute the expected scores (ES)
     for(i in 1:nitems){
-      foc.extract<-extract.item(mod,i,group=2)
-      ref.extract<-extract.item(mod,i,group=1)
+      foc.extract<-extract.item(focal, i)
+      ref.extract<-extract.item(ref, i)
       foc.ES.obs <- expected.item(foc.extract,Theta.focal)
       ref.ES.obs <- expected.item(ref.extract,Theta.focal)
       foc.ES.nrm <- expected.item(foc.extract,theta.normal)
@@ -138,10 +190,10 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     }
     rm(foc.extract,ref.extract,foc.ES.obs,ref.ES.obs,foc.ES.nrm,ref.ES.nrm)
     # put these in dataframe
-    df.ref.obs <- do.call("cbind",list.item_ES_ref.obs) 
-    df.foc.obs <- do.call("cbind",list.item_ES_foc.obs) 
-    df.ref.nrm <- do.call("cbind",list.item_ES_ref.nrm) 
-    df.foc.nrm <- do.call("cbind",list.item_ES_foc.nrm) 
+    df.ref.obs <- do.call("cbind",list.item_ES_ref.obs)
+    df.foc.obs <- do.call("cbind",list.item_ES_foc.obs)
+    df.ref.nrm <- do.call("cbind",list.item_ES_ref.nrm)
+    df.foc.nrm <- do.call("cbind",list.item_ES_foc.nrm)
     #### means for each item in dataframe
     mean.ES.foc <- colMeans(df.foc.obs)
     mean.ES.ref <- colMeans(df.ref.obs)
@@ -165,12 +217,13 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     df.dif.nrm <- df.foc.nrm - df.ref.nrm        # DF in ES at each level of theta
     weighted.dif.nrm <- apply(df.dif.nrm,2, function(x) x*theta.density)
     SIDN <- colSums(weighted.dif.nrm)           #now sum these
-    df.abs.dif.nrm <- abs(df.dif.nrm)            # abs(DF in ES at each level of theta) 
+    df.abs.dif.nrm <- abs(df.dif.nrm)            # abs(DF in ES at each level of theta)
     weighted.dif.abs.nrm <- apply(df.abs.dif.nrm,2, function(x) x*theta.density)
     UIDN <- colSums(weighted.dif.abs.nrm)
     df.item.output <- round(data.frame(SIDS,UIDS,SIDN,UIDN,ESSD,mat.item.max.d,mean.ES.foc,mean.ES.ref),3)
     row.names(df.item.output)<-paste0("item.",1:nrow(df.item.output))
-    
+    if(!plot && DIF) return(df.item.output[focal_items, ])
+
     ##################DTF####################
     STDS <- sum(SIDS)
     UTDS <- sum(UIDS)
@@ -179,7 +232,7 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     ETS.ref.obs <- rowSums(df.ref.obs)  ### test ES (avg across items)
     ETS.dif.obs <- ETS.foc.obs - ETS.ref.obs  ### df in test scores
     UETSDS <- mean(abs(ETS.dif.obs))    ### no cancel across theta, yes across items
-    ##### 
+    #####
     #cohen D and D max
     ETSSD <- f.cohen.d(ETS.foc.obs, ETS.ref.obs) # cohen's D
     test.Dmax <- get.max.D(ETS.dif.obs)
@@ -199,58 +252,50 @@ empirical_ES <- function(mod, Theta.focal = NULL, focal_items = 1L:extract.mirt(
     out.test.names <- c("STDS","UTDS","UETSDS","ETSSD","Starks.DTFR","UDTFR","UETSDN","theta.of.max.test.D","Test.Dmax")
     df.test.output <- data.frame(out.test.names,out.test.stats)
     names(df.test.output) <- c("Effect Size","Value")
-    ret.list<-list(test.level.results = df.test.output)
-  
-    if(item_level){
-      ret.list[[length(ret.list)+1]]<-df.item.output
-      names(ret.list)[length(ret.list)]<-"item.level.results"
-    }#end if item_level
-    if(plot){
-      if(item_level){
-        list.item.plots <- list()
-        for(i in 1:nitems){
-          plot.df1 <- data.frame(Theta=Theta.focal[,1],ES=df.foc.obs[,i],group='foc')
-          plot.df2 <- data.frame(Theta=Theta.focal[,1],ES=df.ref.obs[,i],group='ref')
+    if(!plot && !DIF) return(df.test.output)
+
+    # plots
+    if(DIF){
+        nms <- rep(extract.mirt(mod, 'itemnames')[focal_items], each = nrow(Theta.focal)*2)
+        nms <- factor(nms, levels = extract.mirt(mod, 'itemnames')[focal_items])
+        plt <- data.frame(S=c(df.foc.obs[,1],df.ref.obs[,1]),
+                             Theta=c(Theta.focal[,1], Theta.focal[,1]),
+                             group=c(rep(c('foc', 'ref'), each = nrow(Theta.focal))))
+        for(i in 2:ncol(df.foc.obs)){
+            plt.df <- data.frame(S=c(df.foc.obs[,i],df.ref.obs[,i]),
+                                 Theta=c(Theta.focal[,1], Theta.focal[,1]),
+                                 group=rep(c('foc', 'ref'), each = nrow(Theta.focal)))
+            plt <- rbind(plt, plt.df)
+        }
+        plt$Item <- nms
+        return(xyplot(S ~ Theta|Item, plt,
+                      xlab="Focal Group Theta",
+                      ylab="Expected Score",
+                      groups=plt$group ,
+                      col=c("red","black"),
+                      jitter.y=TRUE,
+                      main='Expected scores',
+                      par.settings=par.settings,
+                      par.strip.text=par.strip.text, ...))
+      } else {
+          plot.df1 <- data.frame(Theta=Theta.focal[,1],ETS=ETS.foc.obs,group='foc')
+          plot.df2 <- data.frame(Theta=Theta.focal[,1],ETS=ETS.ref.obs,group='ref')
           plot.df <- rbind(plot.df1,plot.df2)
-          #plot.df <- data.frame(focal.theta.obs,df.foc.obs[,i],df.ref.obs[,i])
-          my.name<-paste0("Expected scores, Item ",i)
           mykey <- list(space = 'top',
                 columns = 2,
                 text = list(as.character(unique(plot.df$group))),
                 points = list(pch = 1, col=c("red","black"))
           )
-          list.item.plots[[i]] <- xyplot(plot.df$ES~plot.df$Theta,
-                 xlab="Focal Group Theta",
-                 ylab="Expected Score",
-                 groups=plot.df$group ,
-                 col=c("red","black"),
-                 key = mykey,
-                 jitter.y=TRUE,
-                               main=my.name)
-        }#end item loop
-        ret.list[[(length(ret.list)+1)]]<-list.item.plots
-        names(ret.list)[length(ret.list)]<-"ES plots"
-      }
-      
-      
-      plot.df1 <- data.frame(Theta=Theta.focal[,1],ETS=ETS.foc.obs,group='foc')
-      plot.df2 <- data.frame(Theta=Theta.focal[,1],ETS=ETS.ref.obs,group='ref')
-      plot.df <- rbind(plot.df1,plot.df2)
-      mykey <- list(space = 'top',
-            columns = 2,
-            text = list(as.character(unique(plot.df$group))),
-            points = list(pch = 1, col=c("red","black"))
-      )
-      test.plot <- xyplot(plot.df$ETS~plot.df$Theta,
-                          xlab="Focal Group Theta",
-                          ylab="Expected Test Score",
-                          groups=plot.df$group ,
-                          col=c("red","black"),
-                          key = mykey,
-                          jitter.y=TRUE,
-                          main="Expected Test Scores")
-      ret.list[[(length(ret.list)+1)]]<-test.plot
-      names(ret.list)[length(ret.list)]<-"ETS plot"
+          main <- if(extract.mirt(mod, 'nitems') == length(focal_items))
+              "Expected Test Scores" else "Expected Bundle Scores"
+          return(xyplot(ETS~Theta, plot.df,
+                              xlab="Focal Group Theta",
+                              ylab="Expected Test Score",
+                              groups=plot.df$group ,
+                              col=c("red","black"),
+                              key = mykey,
+                              jitter.y=TRUE,
+                              main=main))
     }# end if plot
-    return(ret.list)
+    invisible()
 }
