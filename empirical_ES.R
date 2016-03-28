@@ -6,48 +6,49 @@
 #' focal group empirical theta estimates (and an assumed normally distributed theta)
 #' to compute expected scores.
 #'
-#' Details: Default DIF = TRUE produces several effect sizes indices at the item level.
-#' Signed indices allow DIF favoring the focal group at one point on the theta 
+#' @section DIF:
+#'
+#' The default \code{DIF = TRUE} produces several effect sizes indices at the item level.
+#' Signed indices allow DIF favoring the focal group at one point on the theta
 #' distribution to cancel DIF favoring the reference group at another point on the theta
-#' distribution. Unsigned indices take the absolute value before summing or averaging, 
-#' thus not allowing cancelation of DIF across theta. 
-#' SIDS = Signed Item Difference in the Sample. The average difference in expected scores
-#' across the focal sample using both focal and reference group item parameters.
-#' UIDS = Unsigned Item Difference in the Sample. Same as SIDS except absolute value of 
-#' expected scores is taken prior to averging across the sample.
-#' D-Max = The maximum difference in expected scores in the sample.
-#' ESSD = Expected Score Standardized Difference.Cohen's D for difference in expected scores.
-#' SIDN = Signed Item Difference in a Normal distribution. Identical to SIDS but 
-#' averaged across a normal distribution rather than the sample.
-#' UIDN = Unsigned Item Difference in a Normal distribution. Identical to UIDS but 
-#' averaged across a normal distribution rather than the sample.
-#' 
-#' DIF = FALSE produces a series of test/bundle-level indices that are based on item-level
+#' distribution. Unsigned indices take the absolute value before summing or averaging,
+#' thus not allowing cancellation of DIF across theta.
+#'
+#' \describe{
+#'   \item{SIDS}{Signed Item Difference in the Sample. The average difference in expected scores
+#' across the focal sample using both focal and reference group item parameters.}
+#'   \item{UIDS}{Unsigned Item Difference in the Sample. Same as SIDS except absolute value of
+#' expected scores is taken prior to averaging across the sample.}
+#'   \item{D-Max}{The maximum difference in expected scores in the sample.}
+#'   \item{ESSD}{Expected Score Standardized Difference. Cohen's D for difference in expected scores.}
+#'   \item{SIDN}{Signed Item Difference in a Normal distribution. Identical to SIDS but
+#' averaged across a normal distribution rather than the sample.}
+#'   \item{UIDN}{Unsigned Item Difference in a Normal distribution. Identical to UIDS but
+#' averaged across a normal distribution rather than the sample.}
+#' }
+#'
+#' @section DBF/DTF:
+#'
+#' \code{DIF = FALSE} produces a series of test/bundle-level indices that are based on item-level
 #' indices.
-#' STDS = Signed Test Differences in the Sample. The sum of the SIDS across items.
-#' UTDS = Unsigned Test Differences in the Sample. The sum of the UIDS across items.
-#' Stark's DTFR = Stark's version of STDS using a normal distribution rather than 
-#' sample estimated thetas.
-#' UDTFR = Unsigned Expected Test Scores Differences in the Sample. The difference 
-#' inobserved summed scale scores expected, onaverage, across ahypothetical focal 
-#' grou pwith anormally distributed theta, had DF been uniform innature for all items
-#' UETSDS = Unsigned Expected Test Score Differences in a Normal distribution. 
+#'
+#' \describe{
+#'   \item{STDS}{Signed Test Differences in the Sample. The sum of the SIDS across items.}
+#'   \item{UTDS}{Unsigned Test Differences in the Sample. The sum of the UIDS across items.}
+#'   \item{Stark's DTFR}{Stark's version of STDS using a normal distribution rather than
+#' sample estimated thetas.}
+#'   \item{UDTFR}{Unsigned Expected Test Scores Differences in the Sample. The difference
+#' in observed summed scale scores expected, on average, across a hypothetical focal
+#' group with anormally distributed theta, had DF been uniform innature for all items}
+#'   \item{UETSDS}{Unsigned Expected Test Score Differences in the Sample.
 #' The hypothetical difference inexpected scale scores that would have been present if
-#' scale-level DF had been uniform across respondents (i.e., always favoring the 
-#' focal group).
-#' UETSDN = Identical to UETSDS but computed using anormal distribution.
-#' Test D-Max = Maximum expected test score differences in the sample.
-#' ETSSD = Expected Test Score Standardized Difference. Cohen's D for expected 
-#' test scores.
-#'  
-#' Plot = TRUE
-#' Expected score plots using focal group estimated thetas and estimated item parameters
-#' for both the reference and focal groups.
-#' 
-#' 
-#'     
-#' . Sperate descriptions whether DIF = TRUE/FALSE
-#' (for DBF/DTF measures as well)
+#' scale-level DF had been uniform across respondents (i.e., always favoring the
+#' focal group).}
+#'   \item{UETSDN}{Identical to UETSDS but computed using anormal distribution.}
+#'   \item{Test D-Max}{Maximum expected test score differences in the sample.}
+#'   \item{ETSSD}{Expected Test Score Standardized Difference. Cohen's D for expected
+#' test scores.}
+#' }
 #'
 #' @param mod a multipleGroup object which estimated only 2 groups
 #' @param focal_items a numeric vector indicating which items to include the tests. The
