@@ -37,7 +37,10 @@ model_anchor <- multipleGroup(dat, model = 1, group = group,
   invariance = c(anc.items.names, 'free_means', 'free_var'))  # sets mean of group 1 to 0 so ref as 1
 # ### focal thetas these will be input into the function, check their mean
 
-source("empirical_ES.R")
-effect.sizes.out <- empirical_ES(mod = model_anchor)
-effect.sizes.out$test.level.results
-effect.sizes.out$item.level.results
+#source("empirical_ES.R")
+item.level <- empirical_ES(model_anchor)
+test.level <- empirical_ES(model_anchor, DIF=FALSE)
+#plots 
+empirical_ES(model_anchor, plot = TRUE)
+empirical_ES(model_anchor, DIF = FALSE, plot = TRUE)
+empirical_ES(model_anchor, focal_items = 1,plot=TRUE)
